@@ -1,0 +1,106 @@
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: #121212;
+    color: #f1f1f1;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+    text-align: center;
+}
+
+header {
+    background: #1f1f1f;
+    padding: 20px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    margin: 0;
+    font-size: 2.5em;
+    color: #ffcc00;
+}
+
+p {
+    font-size: 1.2em;
+    opacity: 0.8;
+}
+
+.profile-pic {
+    width: 150px;
+    border-radius: 50%;
+    margin-top: 20px;
+    border: 3px solid #ffcc00;
+}
+
+section {
+    padding: 40px 0;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease-in-out;
+}
+
+h2 {
+    font-size: 2em;
+    color: #ffcc00;
+}
+
+.job, .education {
+    background: #1a1a1a;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 10px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    padding: 5px 0;
+}
+
+.skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.skill-list span {
+    background: #ffcc00;
+    color: #121212;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+footer {
+    background: #1f1f1f;
+    padding: 20px 0;
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+i {
+    margin-right: 8px;
+    color: #ffcc00;
+}
+
+.linkedin-link {
+    display: inline-block;
+    color: #ffcc00;
+    font-size: 1.2em;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.linkedin-link:hover {
+    color: #ffffff;
+}

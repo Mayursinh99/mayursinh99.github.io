@@ -1,0 +1,15 @@
+{
+  "short_name": "Profile Page",
+  "name": "Mayursinh Jadeja Profile Page",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "16x16 32x32 48x48 64x64 128x128 192x192 256x256 384x384 512x512",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}

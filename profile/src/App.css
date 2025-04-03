@@ -1,0 +1,10 @@
+/* Global styles */
+body {
+  font-family: 'Arial', sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: 'Helvetica', sans-serif;
+}
+
+/* Tailwind CSS can override this, but feel free to add custom styles */

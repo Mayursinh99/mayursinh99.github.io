@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IPv4 Calculator</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f1f1f1;
+    margin: 20px;
+  }
+  .container {
+    background: white;
+    padding: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #ccc;
+  }
+  h1 {
+    text-align: center;
+  }
+  label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+  }
+  input[type="text"], select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  button {
+    margin-top: 15px;
+    width: 100%;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  #result {
+    margin-top: 20px;
+    background: #eef;
+    padding: 15px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    display: none;
+  }
+  #ipList {
+    margin-top: 15px;
+    background: #eef;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    display: none;
+  }
+  .pagination {
+    margin-top: 15px;
+    position: relative;
+    display: none; /* Hidden initially */
+    height: 40px;
+  }
+  .pagination button {
+    width: auto;
+    padding: 8px 15px;
+    position: absolute;
+    top: 0;
+  }
+  #prevBtn {
+    left: 0;
+  }
+  #nextBtn {
+    right: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>IPv4 Calculator</h1>
+    <label for="ip">IP Address (e.g., 192.168.1.10):</label>
+    <input type="text" id="ip" placeholder="Enter IP address" />
+
+    <label for="cidr">CIDR (e.g., /24):</label>
+    <select id="cidr">
+      <option value="" selected>Select CIDR</option>
+    </select>
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div id="result"></div>
+
+    <button id="listIPsBtn" onclick="showIPs()" style="display:none; margin-top:10px;">List IPs</button>
+
+    <div id="ipList"></div>
+
+    <div id="pagination" class="pagination">
+      <button id="prevBtn" onclick="prevPage()">Previous</button>
+      <button id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+  </div>
+
+<script>
+  // Populate CIDR dropdown
+  const cidrSelect = document.getElementById('cidr');
+  for (let i = 0; i <= 32; i++) {
+    cidrSelect.innerHTML += `<option value="${i}">/${i}</option>`;
+  }
+
+  let ipArray = [];
+  let currentPage = 1;
+  let totalPages = 1;
+
+  function ipToNumber(ip) {
+    const parts = ip.split('.');
+    if (parts.length !== 4) return null;
+    let num = 0;
+    for (let i = 0; i < 4; i++) {
+      let part = parseInt(parts[i]);
+      if (part < 0 || part > 255 || isNaN(part)) return null;
+      num = (num << 8) + part;
+    }
+    return num >>> 0;
+  }
+
+  function numberToIp(num) {
+    return [
+      (num >>> 24) & 255,
+      (num >>> 16) & 255,
+      (num >>> 8) & 255,
+      num & 255
+    ].join('.');
+  }
+
+  function calculate() {
+    const ipInput = document.getElementById('ip').value.trim();
+    const cidr = parseInt(cidrSelect.value);
+
+    if (!ipInput) {
+      alert('Please enter an IP address.');
+      return;
+    }
+    if (isNaN(cidr) || cidr < 0 || cidr > 32) {
+      alert('Please select a valid CIDR.');
+      return;
+    }
+
+    const ipNum = ipToNumber(ipInput);
+    if (ipNum === null) {
+      alert('Invalid IP address format.');
+      return;
+    }
+
+    const mask = cidr === 0 ? 0 : (0xFFFFFFFF << (32 - cidr)) >>> 0;
+    const network = ipNum & mask;
+    const broadcast = network | (~mask >>> 0);
+
+    const totalHosts = broadcast - network + 1;
+    const usableHosts = (cidr === 31 || cidr === 32) ? totalHosts : Math.max(totalHosts - 2, 0);
+
+    let resultText = '';
+    resultText += `Network Address: ${numberToIp(network)}\n`;
+    resultText += `Broadcast Address: ${numberToIp(broadcast)}\n`;
+    resultText += `Subnet Mask: ${numberToIp(mask)}\n`;
+    resultText += `Total Hosts: ${totalHosts}\n`;
+    resultText += `Usable Hosts: ${usableHosts}\n`;
+
+    const resultDiv = document.getElementById('result');
+    resultDiv.textContent = resultText;
+    resultDiv.style.display = resultText.trim() ? 'block' : 'none';
+
+    // Prepare IP list
+    ipArray = [];
+    if (usableHosts > 0) {
+      let startIp = cidr === 31 ? network : network + 1;
+      let endIp = cidr === 31 ? broadcast : broadcast - 1;
+
+      for (let i = startIp; i <= endIp; i++) {
+        ipArray.push(numberToIp(i));
+      }
+    }
+
+    currentPage = 1;
+    totalPages = Math.ceil(ipArray.length / 10);
+
+    document.getElementById('ipList').style.display = 'none';
+    document.getElementById('ipList').innerHTML = '';
+    document.getElementById('listIPsBtn').style.display = ipArray.length > 0 ? 'block' : 'none';
+
+    // Hide pagination on calculate
+    document.getElementById('pagination').style.display = 'none';
+  }
+
+  function showIPs() {
+    displayPage();
+    document.getElementById('ipList').style.display = 'block';
+  }
+
+  function displayPage() {
+    const listContainer = document.getElementById('ipList');
+    const pagination = document.getElementById('pagination');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    const start = (currentPage - 1) * 10;
+    const end = Math.min(start + 10, ipArray.length);
+    const pageIps = ipArray.slice(start, end);
+
+    listContainer.innerHTML = `<strong>Usable IPs (Page ${currentPage} of ${totalPages}):</strong>\n` + pageIps.join('\n');
+
+    if (ipArray.length > 10) {
+      pagination.style.display = 'flex';
+      prevBtn.style.display = currentPage === 1 ? 'none' : 'inline-block';
+      nextBtn.style.display = currentPage === totalPages ? 'none' : 'inline-block';
+    } else {
+      pagination.style.display = 'none';
+    }
+  }
+
+  function prevPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      displayPage();
+    }
+  }
+
+  function nextPage() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      displayPage();
+    }
+  }
+</script>
+</body>
+</html>

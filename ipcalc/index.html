@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPv4 Subnet Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>IPv4 Calculator</h1>
+    <label>IP Address (e.g., 192.168.1.10):</label>
+    <input type="text" id="ip" placeholder="Enter IP address">
+
+    <label>CIDR (e.g., /24):</label>
+    <select id="cidr">
+      <option value="">Select CIDR</option>
+      ${Array.from({length: 33}, (_, i) => `<option value="${i}">/${i}</option>`).join('')}
+    </select>
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    function ipToBinary(ip) {
+      return ip.split('.').map(octet => {
+        const bin = parseInt(octet, 10).toString(2);
+        return bin.padStart(8, '0');
+      }).join('');
+    }
+
+    function binaryToIp(bin) {
+      return bin.match(/.{8}/g).map(b => parseInt(b, 2)).join('.');
+    }
+
+    function getWildcardMask(cidr) {
+      const mask = (1 << 32) - (1 << (32 - cidr));
+      const inverted = ~mask >>> 0;
+      return [(inverted >>> 24), (inverted >>> 16 & 255), (inverted >>> 8 & 255), (inverted & 255)].join('.');
+    }
+
+    function getIpClass(ip) {
+      const first = parseInt(ip.split('.')[0]);
+      if (first < 128) return 'A';
+      if (first < 192) return 'B';
+      if (first < 224) return 'C';
+      if (first < 240) return 'D';
+      return 'E';
+    }
+
+    function calculate() {
+      const ip = document.getElementById('ip').value;
+      const cidr = parseInt(document.getElementById('cidr').value);
+      if (!ip || isNaN(cidr)) {
+        alert("Please enter a valid IP and CIDR.");
+        return;
+      }
+
+      const binaryIp = ipToBinary(ip);
+      const networkBinary = binaryIp.substring(0, cidr).padEnd(32, '0');
+      const broadcastBinary = binaryIp.substring(0, cidr).padEnd(32, '1');
+
+      const networkAddress = binaryToIp(networkBinary);
+      const broadcastAddress = binaryToIp(broadcastBinary);
+      const firstHost = binaryToIp((BigInt('0b' + networkBinary) + 1n).toString(2).padStart(32, '0'));
+      const lastHost = binaryToIp((BigInt('0b' + broadcastBinary) - 1n).toString(2).padStart(32, '0'));
+
+      const hostBits = 32 - cidr;
+      const usableHosts = cidr === 31 ? 2 : cidr === 32 ? 1 : (2 ** hostBits - 2);
+      const subnetMask = binaryToIp('1'.repeat(cidr).padEnd(32, '0'));
+      const wildcardMask = getWildcardMask(cidr);
+      const ipClass = getIpClass(ip);
+
+      document.getElementById('output').innerHTML = `
+        <pre>
+Network Address:     ${networkAddress}
+Broadcast Address:   ${broadcastAddress}
+First Host:          ${firstHost}
+Last Host:           ${lastHost}
+Subnet Mask:         ${subnetMask}
+Wildcard Mask:       ${wildcardMask}
+Usable Hosts:        ${usableHosts}
+IP Class:            ${ipClass}
+        </pre>
+      `;
+    }
+  </script>
+</body>
+</html>
